@@ -1,5 +1,4 @@
 # bmn-usr-mngt | Buman User Management
-------
 [![Pipeline](https://github.com/Krr0ptioN/bmn-usr-mngt/actions/workflows/node.js.yml/badge.svg)](https://github.com/Krr0ptioN/bmn-usr-mngt/actions/workflows/node.js.yml)
 ------
 Buman User Management (microservice) is service which take of the authentication and user managment
