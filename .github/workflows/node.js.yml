@@ -20,6 +20,9 @@ jobs:
         with:
           node-version: '20.x'
 
+      - name: Build
+        run: npm ci
+
       - name: Unit Test
         run: npm test
 
