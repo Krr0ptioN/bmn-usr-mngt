@@ -1,5 +1,6 @@
 # bmn-usr-mngt | Buman User Management
-
+[![Pipeline](https://github.com/Krr0ptioN/bmn-usr-mngt/actions/workflows/node.js.yml/badge.svg)](https://github.com/Krr0ptioN/bmn-usr-mngt/actions/workflows/node.js.yml)
+------
 Buman User Management (microservice) is service which take of the authentication and user managment
 of the [Buman](https://github.com/krr0ption/buman) application.
 
@@ -30,13 +31,13 @@ $ yarn run start:prod
 
 ```bash
 # unit tests
-$ yarn run test
+$ npm run test
 
 # e2e tests
-$ yarn run test:e2e
+$ npm run test:e2e
 
 # test coverage
-$ yarn run test:cov
+$ npm run test:cov
 ```
 
 ## Support
