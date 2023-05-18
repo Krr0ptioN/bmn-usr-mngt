@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
         - name: bmn-usr-mngt
-          image: mardinpro/bmn-usr-mngt:v1
+          image: mardinpro/bmn-usr-mngt:2
           ports:
             - containerPort: 3000
