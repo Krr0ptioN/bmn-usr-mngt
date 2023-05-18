@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bmn-usr-mngt-dp
+  labels:
+    app: bmn-usr-mngt-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bmn-usr-mngt-app
+  template:
+    metadata:
+      labels:
+        app: bmn-usr-mngt-app
+    spec:
+      containers:
+        - name: bmn-usr-mngt
+          image: mardinpro/bmn-usr-mngt:v1
+          ports:
+            - containerPort: 3000
