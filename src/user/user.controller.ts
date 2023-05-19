@@ -16,11 +16,6 @@ export class UserController {
     this.userService = new UserService();
   }
 
-  @Get("/")
-  getHealth(){
-    return { health: "ok" }
-  }
-
   // DOING  Get into route
   @Get("/info/:id")
   infoUser(@Param("id") id: number): string{
