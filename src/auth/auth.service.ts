@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from "prisma/prisma.service"
 
 @Injectable()
 export class AuthService {
+
+  constructor(private prisma: PrismaService) { }
 
   // DOING  SignIn
   // - 1. Does a user with this email exist?
@@ -14,7 +17,7 @@ export class AuthService {
   //     duration: 300,
   //     errorMessage: 'You have reached the limit of login requests. You have to wait 5 minutes before trying again.'
   // })
-  signIn(){}
+  async signIn() { }
 
 
   // DOING  SignUp
@@ -23,10 +26,11 @@ export class AuthService {
   // - 2. Is the given passwords match with our security policies?
   //    - If passwords aren't the same, respond error.
   // - 3. User is now considered to be logged in so send them a JWT in a cookie. 
-  signUp(){}
+  async signUp() { }
 
   // TODO  SignOut
   // - 1. Take the user authentication token from its request.
   // - 2. Cancel his permission and session.
-  signOut(){}
+  async signOut() { }
+  async resetPass() { }
 }
