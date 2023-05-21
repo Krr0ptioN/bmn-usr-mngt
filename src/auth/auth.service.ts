@@ -1,36 +1,109 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  Inject, forwardRef,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from "prisma/prisma.service"
+import { SignInDto } from './dto/signin.dto';
+import { SignUpDto } from './dto/signup.dto';
+import { JwtService } from '@nestjs/jwt';
+import { Response } from 'express';
+import * as bcrypt from 'bcrypt';
+
+const jwtSecret = process.env.JWT_SECRET;
 
 @Injectable()
 export class AuthService {
+  constructor(
+    @Inject(forwardRef(() => JwtService)) private jwt: JwtService,
+    @Inject(forwardRef(() => PrismaService)) private prisma: PrismaService) { }
 
-  constructor(private prisma: PrismaService) { }
+  private async hashPassword(password: string) {
+    const salt = 10;
+    return await bcrypt.hash(password, salt);
+  }
 
-  // DOING  SignIn
-  // - 1. Does a user with this email exist?
-  //    - If not, respond with an error
-  // - 2. Compare the password of the stored user and the supplied password
-  //    - If passwords aren't the same, respond error.
-  // - 3. User is now considered to be logged in so send them a JWT in a cookie. 
-  // @RateLimit({
-  //     points: 5,
-  //     duration: 300,
-  //     errorMessage: 'You have reached the limit of login requests. You have to wait 5 minutes before trying again.'
-  // })
-  async signIn() { }
+  async comparePasswords(password: string, suppliedPassword: string) {
+    return await bcrypt.compare(password, suppliedPassword)
+  }
 
+  async signToken(args: { userId: number; email: string }) {
+    const payload = {
+      id: args.userId,
+      email: args.email,
+    };
 
-  // DOING  SignUp
-  // - 1. Does a user with this email exist?
-  //    - If there is, respond with an error and suggest them to sign-in.
-  // - 2. Is the given passwords match with our security policies?
-  //    - If passwords aren't the same, respond error.
-  // - 3. User is now considered to be logged in so send them a JWT in a cookie. 
-  async signUp() { }
+    const token = await this.jwt.signAsync(payload, {
+      secret: jwtSecret,
+    });
 
-  // TODO  SignOut
-  // - 1. Take the user authentication token from its request.
-  // - 2. Cancel his permission and session.
-  async signOut() { }
+    return token;
+  }
+
+  private async userExist(args: { email: string, userName: string }) {
+    const valueForCheck = args.email ? args.email : args.userName;
+    return await this.prisma.user.findUnique({ where: { [args.email ? 'email' : 'userName']: valueForCheck } });
+  }
+
+  async signIn(dto: SignInDto, res: Response) {
+    const { email, password, userName, } = dto;
+    if (!userName && !email) {
+      throw new Error('Either username or email must be provided.');
+    }
+
+    const user = await this.userExist({ email, userName });
+
+    if (!user) {
+      throw new BadRequestException('Wrong credentials');
+    }
+    const hashedSupplyPassword = await this.hashPassword(password)
+    const passwordMatch = this.comparePasswords(hashedSupplyPassword, user.hashedPassword);
+
+    if (!passwordMatch) {
+      throw new Error('Invalid password.');
+    }
+
+    const token = await this.signToken({
+      userId: user.id,
+      email: user.email,
+    });
+
+    if (!token) {
+      throw new ForbiddenException('Could not signin');
+    }
+    res.cookie('token', token, {});
+
+    return res.send({ message: 'Logged in succefully' })
+  }
+
+  async signUp(dto: SignUpDto, res: Response) {
+    const { email, password, userName, firstName, lastName } = dto;
+    const user = await this.userExist({ email, userName });
+    if (user) {
+      throw new BadRequestException('Account already exists');
+    }
+
+    const hashedPassword = await this.hashPassword(password);
+    const createdUser = await this.prisma.user.create({
+      data: {
+        email,
+        hashedPassword,
+        firstName,
+        lastName,
+        userName,
+      },
+    });
+
+    if (createdUser) {
+
+    }
+    return { message: 'User created succefully' };
+  }
+
+  async signOut(res: Response) {
+    res.clearCookie('token');
+    return res.send({ message: 'Logged out succefully' });
+  }
   async resetPass() { }
 }
