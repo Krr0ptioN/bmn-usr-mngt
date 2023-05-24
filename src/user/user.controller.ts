@@ -1,39 +1,31 @@
-import { 
-  Controller, 
-  NotFoundException, 
+import {
+  Controller,
+  Session,
   Get,
   Put,
-  Delete, 
-  Param
+  Delete,
+  UseGuards
 } from '@nestjs/common';
-import { UserService } from "./user.service"
+import { UserService } from "./../user/user.service"
+import { AuthGuard } from './../guards/auth.guard';
 
 @Controller('/api/user')
 export class UserController {
-  userService: UserService;
+  constructor(private userService: UserService) { }
 
-  constructor(){
-    this.userService = new UserService();
-  }
-
-  @Get("/")
-  getHealth(){
-    return { health: "ok" }
-  }
-
-  // DOING  Get into route
-  @Get("/info/:id")
-  infoUser(@Param("id") id: number): string{
-    return this.userService.info(id);
+  @Get("/amilogged")
+  @UseGuards(AuthGuard)
+  amILogged(@Session() session: any) {
+    return session.userId;
   }
 
   // TODO   Modify user route
   // - Throw exception if the user didn't existed
   @Put("/edit")
-  editUser(){}
+  editUser() { }
 
   // TODO   Delete user account
   // - Throw exception if the user didn't existed
   @Delete("/delete")
-  deleteUser(){}
+  deleteUser() { }
 }
