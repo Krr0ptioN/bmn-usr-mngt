@@ -1,31 +1,31 @@
 import {
   Injectable,
-  Inject, forwardRef,
+  Inject,
+  forwardRef,
   BadRequestException,
   ForbiddenException,
+  UnauthorizedException,
+  BadGatewayException,
 } from '@nestjs/common';
-import { PrismaService } from "prisma/prisma.service"
+import { UserService } from './../user/user.service';
 import { SignInDto } from './dto/signin.dto';
 import { SignUpDto } from './dto/signup.dto';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 
-const jwtSecret = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(forwardRef(() => JwtService)) private jwt: JwtService,
-    @Inject(forwardRef(() => PrismaService)) private prisma: PrismaService) { }
+    @Inject(forwardRef(() => UserService)) private userService: UserService,
+  ) { }
 
   private async hashPassword(password: string) {
     const salt = 10;
     return await bcrypt.hash(password, salt);
-  }
-
-  async comparePasswords(password: string, suppliedPassword: string) {
-    return await bcrypt.compare(password, suppliedPassword)
   }
 
   async signToken(args: { userId: number; email: string }) {
@@ -35,38 +35,37 @@ export class AuthService {
     };
 
     const token = await this.jwt.signAsync(payload, {
-      secret: jwtSecret,
+      secret: JWT_SECRET,
     });
 
     return token;
   }
 
-  private async userExist(args: { email: string, userName: string }) {
-    const valueForCheck = args.email ? args.email : args.userName;
-    return await this.prisma.user.findUnique({ where: { [args.email ? 'email' : 'userName']: valueForCheck } });
-  }
-
   async signIn(dto: SignInDto, res: Response) {
-    const { email, password, userName, } = dto;
+    const { email, password, userName } = dto;
     if (!userName && !email) {
       throw new Error('Either username or email must be provided.');
     }
 
-    const user = await this.userExist({ email, userName });
+    let foundUser = await this.userService.find({ email, userName });
+    foundUser = foundUser[0];
 
-    if (!user) {
+    // TODO Test for wrong credentials
+    if (!foundUser) {
       throw new BadRequestException('Wrong credentials');
     }
-    const hashedSupplyPassword = await this.hashPassword(password)
-    const passwordMatch = this.comparePasswords(hashedSupplyPassword, user.hashedPassword);
 
+    const passwordMatch = await bcrypt.compare(
+      password,
+      foundUser.hashedPassword,
+    );
     if (!passwordMatch) {
-      throw new Error('Invalid password.');
+      throw new UnauthorizedException('Invalid password.');
     }
 
     const token = await this.signToken({
-      userId: user.id,
-      email: user.email,
+      userId: foundUser.id,
+      email: foundUser.email,
     });
 
     if (!token) {
@@ -74,36 +73,33 @@ export class AuthService {
     }
     res.cookie('token', token, {});
 
-    return res.send({ message: 'Logged in succefully' })
+    return res.send({ message: 'Logged in succefully' });
   }
 
   async signUp(dto: SignUpDto, res: Response) {
     const { email, password, userName, firstName, lastName } = dto;
-    const user = await this.userExist({ email, userName });
-    if (user) {
-      throw new BadRequestException('Account already exists');
-    }
 
     const hashedPassword = await this.hashPassword(password);
-    const createdUser = await this.prisma.user.create({
-      data: {
-        email,
-        hashedPassword,
-        firstName,
-        lastName,
-        userName,
-      },
+    const createdUser = await this.userService.create({
+      userName: userName,
+      firstName: firstName,
+      lastName: lastName,
+      hashedPassword: hashedPassword,
+      email: email,
     });
 
-    if (createdUser) {
-
+    if (!createdUser) {
+      throw new BadGatewayException('Could not create account');
     }
-    return { message: 'User created succefully' };
+    return res.send({ message: 'User created succefully' });
   }
 
   async signOut(res: Response) {
     res.clearCookie('token');
-    return res.send({ message: 'Logged out succefully' });
+    return res.json({ message: 'Logged out succefully' });
   }
+
+  // TODO Implement validation and email verification process
+  // TODO Test the feature
   async resetPass() { }
 }

@@ -1,15 +1,13 @@
 import {
   Controller,
-  NotFoundException,
   Session,
   Get,
   Put,
   Delete,
-  Param,
   UseGuards
 } from '@nestjs/common';
-import { UserService } from "./user.service"
-import { AuthGuard } from 'src/guards/auth.guard';
+import { UserService } from "./../user/user.service"
+import { AuthGuard } from './../guards/auth.guard';
 
 @Controller('/api/user')
 export class UserController {
@@ -19,11 +17,6 @@ export class UserController {
   @UseGuards(AuthGuard)
   amILogged(@Session() session: any) {
     return session.userId;
-  }
-
-  @Get("/info/:id")
-  infoUser(@Param("id") id: number): string {
-    return this.userService.info(id);
   }
 
   // TODO   Modify user route
