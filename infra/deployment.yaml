@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: bmn-usr-mngt
-          image: mardinpro/bmn-usr-mngt:15
+          image: mardinpro/bmn-usr-mngt:18
           env:
             - name: POSTGRES_DB
               valueFrom:
