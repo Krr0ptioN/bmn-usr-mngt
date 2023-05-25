@@ -5,7 +5,7 @@ metadata:
   labels:
     app: bmn-usr-mngt-app
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: bmn-usr-mngt-app
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: bmn-usr-mngt
-          image: mardinpro/bmn-usr-mngt:8
+          image: mardinpro/bmn-usr-mngt:15
           env:
             - name: POSTGRES_DB
               valueFrom:

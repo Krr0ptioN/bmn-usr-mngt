@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/signin.dto';
 import { SignUpDto } from './dto/signup.dto';
 import { Response } from 'express';
-import { PrismaService } from './../../prisma/prisma.service';
+import { PrismaService } from './../prisma/prisma.service';
 import { UserService } from './../user/user.service';
 import { UserDto } from './../user/dto/user.dto';
 import { JwtService } from '@nestjs/jwt';
