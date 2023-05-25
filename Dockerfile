@@ -9,6 +9,7 @@ COPY tsconfig.json .
 COPY tsconfig.build.json .
 COPY nest-cli.json .
 COPY src .
+COPY prisma ./prisma/
 
 RUN npm ci
 
